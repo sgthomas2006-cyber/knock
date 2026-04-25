@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Knock v0</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sales Gauge</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+:root{--bg:#0d0d0d;--surface:#161616;--border:#2a2a2a;--accent:#c8ff00;--accent-dim:#8aad00;--text:#f0f0f0;--muted:#666;--red:#ff4444;--orange:#ff9900;--blue:#4488ff;--green:#00cc66;--purple:#aa77ff;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:16px 16px 60px;}
+header{display:flex;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+h1{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);}
+.date-badge{margin-left:auto;font-size:11px;color:var(--muted);}
+.tab-bar{display:flex;gap:6px;margin-bottom:16px;}
+.tab{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:10px 4px;cursor:pointer;text-align:center;transition:all .15s;}
+.tab.active{border-color:var(--accent);color:var(--accent);background:rgba(200,255,0,.05);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+/* SESSION */
+.session-bar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.session-bar .locked{flex:1;}
+.session-street{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--accent);}
+.session-date{font-size:10px;color:var(--muted);margin-top:2px;}
+.change-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+.session-setup{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:16px;margin-bottom:12px;}
+.session-setup h2{font-family:'Syne',sans-serif;font-size:12px;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;}
+.field{margin-bottom:11px;}
+.field label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+input[type=text],input[type=date]{background:#0d0d0d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;padding:10px 12px;width:100%;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+input:focus{border-color:var(--accent);}
+.set-btn{width:100%;background:var(--accent);border:none;border-radius:6px;color:#0d0d0d;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;padding:12px;cursor:pointer;}
+.set-btn:active{background:var(--accent-dim);}
+/* REKNOCK PANEL */
+.reknock-panel{background:var(--surface);border:1px solid var(--orange);border-radius:8px;padding:14px;margin-bottom:12px;}
+.reknock-panel h2{font-family:'Syne',sans-serif;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.reknock-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1a1a1a;cursor:pointer;}
+.reknock-item:last-child{border-bottom:none;}
+.reknock-addr{flex:1;}
+.reknock-street{font-size:10px;color:var(--muted);}
+.reknock-door{font-size:14px;color:var(--text);}
+.reknock-reason{font-size:10px;color:var(--orange);margin-top:2px;}
+.reknock-tap{font-size:10px;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:4px 8px;white-space:nowrap;}
+.empty-reknock{font-size:11px;color:var(--muted);text-align:center;padding:10px 0;}
+/* VOICE */
+.voice-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
+.card-title{font-family:'Syne',sans-serif;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.voice-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.voice-hint span{color:var(--text);}
+textarea{background:#0d0d0d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:10px 12px;width:100%;height:60px;resize:none;outline:none;margin-bottom:8px;}
+textarea:focus{border-color:var(--accent);}
+.parse-btn{width:100%;background:transparent;border:1px solid var(--accent);border-radius:6px;color:var(--accent);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:10px;cursor:pointer;}
+.parse-btn:active{background:rgba(200,255,0,.1);}
+/* FORM */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;}
+.reknock-banner{background:rgba(255,153,0,.1);border:1px solid var(--orange);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--orange);display:flex;align-items:center;justify-content:space-between;}
+.clear-reknock{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0;}
+.stage-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;}
+.stage-btn{background:#0d0d0d;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:9px 6px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.4;}
+.stage-btn.selected{border-color:var(--accent);color:var(--accent);background:rgba(200,255,0,.06);}
+.stage-btn.sale-btn.selected{border-color:var(--green);color:var(--green);background:rgba(0,204,102,.08);}
+.stage-btn:active{transform:scale(.97);}
+.stage-btn .ticks{display:block;font-size:11px;margin-bottom:2px;}
+/* REASON SECTION */
+.reason-section{margin-bottom:12px;}
+.reason-section label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.reason-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{background:#0d0d0d;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:6px 12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.chip.selected{border-color:var(--accent);color:var(--accent);background:rgba(200,255,0,.06);}
+.chip.cbl-chip.selected{border-color:var(--orange);color:var(--orange);background:rgba(255,153,0,.06);}
+.chip.close-chip.selected{border-color:var(--red);color:var(--red);background:rgba(255,68,68,.06);}
+.chip:active{transform:scale(.96);}
+/* CONTRACT DETAILS */
+.contract-details{background:#0d0d0d;border:1px solid var(--border);border-radius:6px;padding:10px;margin-top:6px;margin-bottom:8px;display:none;}
+.contract-details.show{display:block;}
+.contract-row{display:flex;gap:8px;margin-bottom:8px;}
+.contract-row:last-child{margin-bottom:0;}
+.contract-row input{font-size:12px;padding:8px 10px;}
+.contract-row label{font-size:10px;color:var(--muted);display:block;margin-bottom:4px;}
+.contract-field{flex:1;}
+.notes-input{width:100%;background:#0d0d0d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;padding:8px 10px;outline:none;}
+.notes-input:focus{border-color:var(--accent);}
+.submit-btn{width:100%;background:var(--accent);border:none;border-radius:6px;color:#0d0d0d;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;padding:13px;cursor:pointer;}
+.submit-btn:active{background:var(--accent-dim);}
+/* VIEW TAB */
+.filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-row input,.filter-row select{font-size:12px;padding:8px 10px;flex:1;min-width:0;background:#0d0d0d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;outline:none;-webkit-appearance:none;}
+/* KPI */
+.kpi-section{margin-bottom:16px;}
+.kpi-title{font-family:'Syne',sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 5px;text-align:center;}
+.stat .val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);display:block;}
+.stat .lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:1px;}
+.stage-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:10px;}
+.stage-kpi{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 10px;display:flex;align-items:center;gap:8px;}
+.stage-kpi .sk-ticks{font-size:10px;min-width:60px;}
+.stage-kpi .sk-body{flex:1;}
+.stage-kpi .sk-count{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--accent);}
+.stage-kpi .sk-name{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.stage-kpi .sk-conv{font-size:9px;color:var(--blue);margin-top:1px;}
+.conv-bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden;}
+.conv-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+/* LOG */
+.street-group{margin-bottom:16px;}
+.street-label{font-family:'Syne',sans-serif;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:5px 0;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.entry{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #1a1a1a;}
+.entry-num{font-size:10px;color:var(--muted);min-width:18px;padding-top:3px;}
+.entry-body{flex:1;min-width:0;}
+.entry-main{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.entry-house{font-size:15px;font-weight:500;color:var(--text);}
+.entry-ticks{font-size:11px;}
+.entry-tag{font-size:10px;padding:2px 7px;border-radius:20px;}
+.tag-none{background:#1a1a1a;color:var(--muted);}
+.tag-cbl{background:rgba(255,153,0,.12);color:var(--orange);}
+.tag-close{background:rgba(255,68,68,.12);color:var(--red);}
+.tag-sale{background:rgba(0,204,102,.12);color:var(--green);border:1px solid rgba(0,204,102,.3);}
+.tag-progress{background:rgba(68,136,255,.12);color:var(--blue);}
+.tag-reknock{background:rgba(170,119,255,.12);color:var(--purple);}
+.entry-sub{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.reknock-badge{font-size:9px;color:var(--purple);background:rgba(170,119,255,.1);border:1px solid rgba(170,119,255,.3);border-radius:3px;padding:1px 5px;margin-left:4px;}
+.del-btn{background:none;border:none;color:#2a2a2a;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+.del-btn:active{color:var(--red);}
+.empty{text-align:center;color:var(--muted);font-size:12px;padding:32px 0;}
+.export-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;padding:11px;cursor:pointer;margin-top:12px;}
+.export-btn:active{border-color:var(--accent);color:var(--accent);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--accent);color:#0d0d0d;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+select option{background:#161616;}
+</style>
+</head>
+<body>
+<header>
+  <h1>SALES GAUGE</h1>
+  <span class="date-badge" id="headerDate"></span>
+</header>
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('log',this)">LOG</button>
+  <button class="tab" onclick="switchTab('kpi',this)">KPIs</button>
+  <button class="tab" onclick="switchTab('view',this)">VIEW</button>
+</div>
+
+<!-- ═══ LOG TAB ═══ -->
+
+<div class="tab-content active" id="tab-log">
+  <div id="sessionSetup" class="session-setup">
+    <h2>New Session</h2>
+    <div class="field"><label>Date</label><input type="date" id="sessionDate"></div>
+    <div class="field"><label>Street</label><input type="text" id="streetInput" placeholder="e.g. Marcot Road" autocomplete="off"></div>
+    <button class="set-btn" onclick="lockSession()">START SESSION</button>
+  </div>
+  <div id="sessionBar" class="session-bar" style="display:none">
+    <div class="locked">
+      <div class="session-street" id="sessionStreetLabel"></div>
+      <div class="session-date" id="sessionDateLabel"></div>
+    </div>
+    <button class="change-btn" onclick="changeSession()">Change</button>
+  </div>
+
+  <!-- REKNOCK LIST -->
+
+  <div class="reknock-panel" id="reknockPanel" style="display:none">
+    <h2>&#8635; Doors to Reknock</h2>
+    <div id="reknockList"></div>
+  </div>
+
+  <!-- VOICE -->
+
+  <div class="voice-card" id="voiceCard" style="display:none">
+    <div class="card-title">&#127908; Voice Input</div>
+    <p class="voice-hint">Say: <span>"[door], stage [0-6], [reason]"</span><br>e.g. <span>"34, stage 2, billpayer not home"</span></p>
+    <textarea id="voiceInput" placeholder="Paste Wispr Flow text here..."></textarea>
+    <button class="parse-btn" onclick="parseVoice()">PARSE &amp; FILL FORM</button>
+  </div>
+
+  <!-- ENTRY FORM -->
+
+  <div class="form-card" id="entryForm" style="display:none">
+    <div class="card-title">Entry</div>
+    <div id="reknockBanner" style="display:none" class="reknock-banner">
+      <span id="reknockBannerText"></span>
+      <button class="clear-reknock" onclick="clearReknock()">&times;</button>
+    </div>
+    <div class="field"><label>Door / Address</label><input type="text" id="doorNum" placeholder="e.g. 34  or  Flat 3, 1807"></div>
+    <div class="field">
+      <label>Stage Reached</label>
+      <div class="stage-grid">
+        <button class="stage-btn" onclick="selectStage(0)" id="s0"><span class="ticks">&#8212;</span>No Answer</button>
+        <button class="stage-btn" onclick="selectStage(1)" id="s1"><span class="ticks">&#9989;</span>Opened Door</button>
+        <button class="stage-btn" onclick="selectStage(2)" id="s2"><span class="ticks">&#9989;&#9989;</span>Intro</button>
+        <button class="stage-btn" onclick="selectStage(3)" id="s3"><span class="ticks">&#9989;&#9989;&#9989;</span>Speed Test</button>
+        <button class="stage-btn" onclick="selectStage(4)" id="s4"><span class="ticks">&#9989;&#9989;&#9989;&#9989;</span>Presentation</button>
+        <button class="stage-btn" onclick="selectStage(5)" id="s5"><span class="ticks">&#9989;&#9989;&#9989;&#9989;&#9989;</span>Book Engineer</button>
+        <button class="stage-btn sale-btn" onclick="selectStage(6)" id="s6" style="grid-column:span 2"><span class="ticks">&#9989;&#9989;&#9989;&#9989;&#9989;&#9989;</span>Verification Call &#11088;</button>
+      </div>
+    </div>
+
+```
+<!-- CBL REASONS -->
+<div class="reason-section" id="cblSection" style="display:none">
+  <label>Come Back Later &#8212; Reason</label>
+  <div class="reason-chips" id="cblChips">
+    <button class="chip cbl-chip" onclick="toggleChip(this,'cbl','billpayer_home')">Billpayer not home</button>
+    <button class="chip cbl-chip" onclick="toggleChip(this,'cbl','busy')">Busy right now</button>
+    <button class="chip cbl-chip" onclick="toggleChip(this,'cbl','other_cbl')">Other</button>
+  </div>
+  <input type="text" class="notes-input" id="cblOtherText" placeholder="Specify other CBL reason..." style="display:none;margin-top:6px">
+</div>
+
+<!-- CLOSE REASONS -->
+<div class="reason-section" id="closeSection" style="display:none">
+  <label>Reason Not Closed</label>
+  <div class="reason-chips" id="closeChips">
+    <button class="chip close-chip" onclick="toggleChip(this,'close','ni')">Not interested</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','think')">Wants to think about it</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','no_door')">Doesn't buy at door</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','contract')">Locked into contract</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','loyalty')">Provider loyalty</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','no_wifi')">Doesn't use wifi</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','language')">Language barrier</button>
+    <button class="chip close-chip" onclick="toggleChip(this,'close','other_close')">Other</button>
+  </div>
+  <input type="text" class="notes-input" id="closeOtherText" placeholder="Specify other reason..." style="display:none;margin-top:6px">
+  <!-- Contract details -->
+  <div class="contract-details" id="contractDetails">
+    <div class="contract-row">
+      <div class="contract-field"><label>Provider</label><input type="text" id="contractProvider" placeholder="e.g. BT, Sky..."></div>
+      <div class="contract-field"><label>Time left</label><input type="text" id="contractTime" placeholder="e.g. 6 months"></div>
+    </div>
+    <div class="contract-row">
+      <div class="contract-field"><label>Monthly cost</label><input type="text" id="contractCost" placeholder="e.g. £35/mo"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXTRA NOTES -->
+<div class="field">
+  <label>Extra Notes <span style="color:#333;font-size:10px">(optional)</span></label>
+  <input type="text" class="notes-input" id="extraNotes" placeholder="Anything else...">
+</div>
+
+<button class="submit-btn" onclick="submitEntry()">ADD ENTRY</button>
+```
+
+  </div>
+</div>
+
+<!-- ═══ KPI TAB ═══ -->
+
+<div class="tab-content" id="tab-kpi">
+  <div class="filter-row">
+    <input type="date" id="kpiDate">
+    <input type="text" id="kpiStreet" placeholder="Street (all)">
+  </div>
+  <div class="kpi-section">
+    <div class="kpi-title">Overview</div>
+    <div class="stats-bar">
+      <div class="stat"><span class="val" id="kDoors">0</span><span class="lbl">Doors</span></div>
+      <div class="stat"><span class="val" id="kSales">0</span><span class="lbl">Sales</span></div>
+      <div class="stat"><span class="val" id="kCBL">0</span><span class="lbl">CBL</span></div>
+      <div class="stat"><span class="val" id="kRate">0%</span><span class="lbl">Conv.</span></div>
+    </div>
+  </div>
+  <div class="kpi-section">
+    <div class="kpi-title">Stage Breakdown</div>
+    <div class="stage-kpi-grid" id="stageKpiGrid"></div>
+  </div>
+  <div class="kpi-section">
+    <div class="kpi-title">CBL Reasons</div>
+    <div id="cblKpi"></div>
+  </div>
+  <div class="kpi-section">
+    <div class="kpi-title">Close Reasons</div>
+    <div id="closeKpi"></div>
+  </div>
+</div>
+
+<!-- ═══ VIEW TAB ═══ -->
+
+<div class="tab-content" id="tab-view">
+  <div class="filter-row">
+    <input type="date" id="filterDate">
+    <input type="text" id="filterStreet" placeholder="Street...">
+    <select id="filterStage">
+      <option value="">All stages</option>
+      <option value="0">No Answer</option>
+      <option value="1">Opened Door</option>
+      <option value="2">Intro</option>
+      <option value="3">Speed Test</option>
+      <option value="4">Presentation</option>
+      <option value="5">Book Engineer</option>
+      <option value="6">Verification Call</option>
+    </select>
+  </div>
+  <div id="logDisplay"></div>
+  <button class="export-btn" onclick="exportCSV()">&#8595; Export CSV</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+var STAGES=['No Answer','Opened Door','Intro','Speed Test','Presentation','Book Engineer','Verification Call'];
+var TICKS=['\u2014','\u2705','\u2705\u2705','\u2705\u2705\u2705','\u2705\u2705\u2705\u2705','\u2705\u2705\u2705\u2705\u2705','\u2705\u2705\u2705\u2705\u2705\u2705'];
+var CBL_LABELS={billpayer_home:'Billpayer not home',busy:'Busy right now',other_cbl:'Other (CBL)'};
+var CLOSE_LABELS={ni:'Not interested',think:'Wants to think about it',no_door:"Doesn't buy at door",contract:'Locked into contract',loyalty:'Provider loyalty',no_wifi:"Doesn't use wifi",language:'Language barrier',other_close:'Other'};
+
+var entries=JSON.parse(localStorage.getItem(‘sg_entries’)||’[]’);
+var session=JSON.parse(localStorage.getItem(‘sg_session’)||‘null’);
+var selectedStage=null;
+var selectedCBL=null;
+var selectedClose=null;
+var reknockTarget=null; // {id, door, street}
+
+// Init
+document.getElementById(‘sessionDate’).value=toDateStr(new Date());
+document.getElementById(‘headerDate’).textContent=new Date().toLocaleDateString(‘en-GB’,{weekday:‘short’,day:‘numeric’,month:‘short’});
+var td=toDateStr(new Date());
+document.getElementById(‘filterDate’).value=td;
+document.getElementById(‘kpiDate’).value=td;
+[‘filterDate’,‘filterStreet’,‘filterStage’].forEach(function(id){document.getElementById(id).addEventListener(‘input’,renderLog);});
+[‘kpiDate’,‘kpiStreet’].forEach(function(id){document.getElementById(id).addEventListener(‘input’,renderKPI);});
+if(session)showSessionLocked();
+renderLog();renderKPI();
+
+// ── SESSION ──────────────────────────
+function lockSession(){
+var street=document.getElementById(‘streetInput’).value.trim();
+var date=document.getElementById(‘sessionDate’).value;
+if(!street){showToast(‘Enter street name’);return;}
+session={street:street,date:date};
+localStorage.setItem(‘sg_session’,JSON.stringify(session));
+showSessionLocked();
+}
+function showSessionLocked(){
+document.getElementById(‘sessionSetup’).style.display=‘none’;
+document.getElementById(‘sessionBar’).style.display=‘flex’;
+document.getElementById(‘voiceCard’).style.display=’’;
+document.getElementById(‘entryForm’).style.display=’’;
+document.getElementById(‘sessionStreetLabel’).textContent=session.street;
+document.getElementById(‘sessionDateLabel’).textContent=formatDate(session.date);
+renderReknockPanel();
+}
+function changeSession(){
+document.getElementById(‘streetInput’).value=session?session.street:’’;
+document.getElementById(‘sessionDate’).value=session?session.date:toDateStr(new Date());
+document.getElementById(‘sessionSetup’).style.display=’’;
+document.getElementById(‘sessionBar’).style.display=‘none’;
+document.getElementById(‘voiceCard’).style.display=‘none’;
+document.getElementById(‘entryForm’).style.display=‘none’;
+document.getElementById(‘reknockPanel’).style.display=‘none’;
+session=null;
+localStorage.removeItem(‘sg_session’);
+}
+
+// ── REKNOCK PANEL ────────────────────
+function renderReknockPanel(){
+if(!session)return;
+// Find all entries from today that are: no answer OR CBL — and haven’t been fully reknocked to a close
+var today=session.date;
+var todayEntries=entries.filter(function(e){return e.date===today;});
+// Original entries eligible for reknock: stage 0 (no answer) or has CBL reason
+var eligible=todayEntries.filter(function(e){
+if(e.isReknock)return false; // don’t list reknocks themselves
+var hasReknock=todayEntries.some(function(r){return r.isReknock&&r.originalId===e.id;});
+if(hasReknock)return false;
+return e.stage===0||e.cblReason!==null;
+});
+var panel=document.getElementById(‘reknockPanel’);
+var list=document.getElementById(‘reknockList’);
+if(!eligible.length){panel.style.display=‘none’;return;}
+panel.style.display=’’;
+var html=’’;
+eligible.forEach(function(e){
+var reasonLabel=e.stage===0?‘No answer’:(e.cblReason?CBL_LABELS[e.cblReason]||e.cblReason:‘CBL’);
+html+=’<div class="reknock-item" onclick="startReknock('+e.id+')">’;
+html+=’<div class="reknock-addr"><div class="reknock-street">’+e.street+’</div><div class="reknock-door">’+e.door+’</div><div class="reknock-reason">’+reasonLabel+’</div></div>’;
+html+=’<span class="reknock-tap">Reknock →</span></div>’;
+});
+list.innerHTML=html||’<div class="empty-reknock">None to reknock</div>’;
+}
+
+function startReknock(id){
+var orig=entries.find(function(e){return e.id===id;});
+if(!orig)return;
+reknockTarget={id:id,door:orig.door,street:orig.street};
+document.getElementById(‘doorNum’).value=orig.door;
+document.getElementById(‘reknockBannerText’).textContent=‘Reknock: ‘+orig.door+(orig.street!==session.street?’ (’+orig.street+’)’:’’);
+document.getElementById(‘reknockBanner’).style.display=‘flex’;
+document.getElementById(‘entryForm’).scrollIntoView({behavior:‘smooth’,block:‘start’});
+}
+function clearReknock(){
+reknockTarget=null;
+document.getElementById(‘reknockBanner’).style.display=‘none’;
+document.getElementById(‘doorNum’).value=’’;
+}
+
+// ── STAGE SELECT ─────────────────────
+function selectStage(n){
+selectedStage=n;
+for(var i=0;i<=6;i++)document.getElementById(‘s’+i).classList.toggle(‘selected’,i===n);
+// Show/hide reason sections
+// CBL: stages 1-5 can have CBL
+var showCBL=(n>=1&&n<=5);
+// Close reasons: stages 2-5 (got past door open but didn’t close)
+var showClose=(n>=2&&n<=5);
+document.getElementById(‘cblSection’).style.display=showCBL?’’:‘none’;
+document.getElementById(‘closeSection’).style.display=showClose?’’:‘none’;
+if(!showCBL){selectedCBL=null;document.querySelectorAll(’.cbl-chip’).forEach(function(c){c.classList.remove(‘selected’);});}
+if(!showClose){selectedClose=null;document.querySelectorAll(’.close-chip’).forEach(function(c){c.classList.remove(‘selected’);});document.getElementById(‘contractDetails’).classList.remove(‘show’);}
+}
+
+// ── CHIPS ────────────────────────────
+function toggleChip(el,type,val){
+if(type===‘cbl’){
+document.querySelectorAll(’.cbl-chip’).forEach(function(c){c.classList.remove(‘selected’);});
+if(selectedCBL===val){selectedCBL=null;document.getElementById(‘cblOtherText’).style.display=‘none’;}
+else{selectedCBL=val;el.classList.add(‘selected’);document.getElementById(‘cblOtherText’).style.display=val===‘other_cbl’?’’:‘none’;}
+} else {
+document.querySelectorAll(’.close-chip’).forEach(function(c){c.classList.remove(‘selected’);});
+if(selectedClose===val){selectedClose=null;document.getElementById(‘contractDetails’).classList.remove(‘show’);document.getElementById(‘closeOtherText’).style.display=‘none’;}
+else{
+selectedClose=val;el.classList.add(‘selected’);
+document.getElementById(‘contractDetails’).classList.toggle(‘show’,val===‘contract’);
+document.getElementById(‘closeOtherText’).style.display=val===‘other_close’?’’:‘none’;
+}
+}
+}
+
+// ── SUBMIT ───────────────────────────
+function submitEntry(){
+if(!session){showToast(‘Set street first’);return;}
+var door=document.getElementById(‘doorNum’).value.trim();
+if(!door){showToast(‘Enter door / address’);return;}
+if(selectedStage===null){showToast(‘Select a stage’);return;}
+
+var contractInfo=null;
+if(selectedClose===‘contract’){
+var p=document.getElementById(‘contractProvider’).value.trim();
+var t=document.getElementById(‘contractTime’).value.trim();
+var c=document.getElementById(‘contractCost’).value.trim();
+if(p||t||c)contractInfo={provider:p,timeLeft:t,cost:c};
+}
+
+var entry={
+id:Date.now(),
+date:session.date,
+street:session.street,
+door:door,
+stage:selectedStage,
+cblReason:selectedCBL,
+closeReason:selectedClose,
+contractInfo:contractInfo,
+cblOtherText:selectedCBL===‘other_cbl’?document.getElementById(‘cblOtherText’).value.trim():’’,
+closeOtherText:selectedClose===‘other_close’?document.getElementById(‘closeOtherText’).value.trim():’’,
+notes:document.getElementById(‘extraNotes’).value.trim(),
+isReknock:reknockTarget!==null,
+originalId:reknockTarget?reknockTarget.id:null
+};
+
+entries.push(entry);
+save();
+showToast(selectedStage===6?’\u2b50 SALE logged!’:‘Entry added \u2713’);
+resetForm();
+renderReknockPanel();
+renderLog();renderKPI();
+}
+
+function resetForm(){
+document.getElementById(‘doorNum’).value=’’;
+document.getElementById(‘extraNotes’).value=’’;
+document.getElementById(‘voiceInput’).value=’’;
+document.getElementById(‘contractProvider’).value=’’;
+document.getElementById(‘contractTime’).value=’’;
+document.getElementById(‘contractCost’).value=’’;
+selectedStage=null;selectedCBL=null;selectedClose=null;reknockTarget=null;
+document.getElementById(‘reknockBanner’).style.display=‘none’;
+document.getElementById(‘cblSection’).style.display=‘none’;
+document.getElementById(‘closeSection’).style.display=‘none’;
+document.getElementById(‘contractDetails’).classList.remove(‘show’);
+for(var i=0;i<=6;i++)document.getElementById(‘s’+i).classList.remove(‘selected’);
+document.querySelectorAll(’.chip’).forEach(function(c){c.classList.remove(‘selected’);});
+document.getElementById(‘cblOtherText’).style.display=‘none’;
+document.getElementById(‘closeOtherText’).style.display=‘none’;
+document.getElementById(‘cblOtherText’).value=’’;
+document.getElementById(‘closeOtherText’).value=’’;
+}
+
+// ── VOICE PARSE ──────────────────────
+function parseVoice(){
+var raw=document.getElementById(‘voiceInput’).value.trim();
+if(!raw){showToast(‘Paste voice text first’);return;}
+var text=raw.toLowerCase();
+var sm=text.match(/stage\s*(\d)/);
+if(sm)selectStage(Math.min(6,parseInt(sm[1])));
+var nums=raw.match(/\d+/g);
+if(nums)document.getElementById(‘doorNum’).value=nums[0];
+var reason=raw.replace(/stage\s*\d/gi,’’).replace(/^\d+\s*[,.]?\s*/,’’).replace(/[,]+/g,’ ’).trim();
+if(reason)document.getElementById(‘extraNotes’).value=reason;
+showToast(‘Parsed \u2014 check & submit’);
+}
+
+// ── RENDER LOG ───────────────────────
+function renderLog(){
+var fd=document.getElementById(‘filterDate’).value;
+var fs=document.getElementById(‘filterStreet’).value.toLowerCase().trim();
+var fst=document.getElementById(‘filterStage’).value;
+var filtered=entries.filter(function(e){
+return(!fd||e.date===fd)&&(!fs||e.street.toLowerCase().includes(fs))&&(fst===’’||e.stage===parseInt(fst));
+});
+if(!filtered.length){document.getElementById(‘logDisplay’).innerHTML=’<div class="empty">No entries for this filter</div>’;return;}
+var grouped={};
+filtered.forEach(function(e){if(!grouped[e.street])grouped[e.street]=[];grouped[e.street].push(e);});
+var html=’’;
+for(var street in grouped){
+html+=’<div class="street-group"><div class="street-label">’+street+’</div>’;
+grouped[street].forEach(function(e,i){
+var tag=getTag(e);
+var subs=[];
+if(e.isReknock)subs.push(’<span style="color:var(--purple)">↻ Reknock</span>’);
+if(e.cblReason){var cblLabel=CBL_LABELS[e.cblReason]||e.cblReason;if(e.cblReason===‘other_cbl’&&e.cblOtherText)cblLabel+=’ — ‘+e.cblOtherText;subs.push(cblLabel);}
+if(e.closeReason){var closeLabel=CLOSE_LABELS[e.closeReason]||e.closeReason;if(e.closeReason===‘other_close’&&e.closeOtherText)closeLabel+=’ — ‘+e.closeOtherText;subs.push(closeLabel);}
+if(e.contractInfo){
+var ci=[];
+if(e.contractInfo.provider)ci.push(e.contractInfo.provider);
+if(e.contractInfo.timeLeft)ci.push(e.contractInfo.timeLeft+’ left’);
+if(e.contractInfo.cost)ci.push(e.contractInfo.cost+’/mo’);
+if(ci.length)subs.push(’(’+ci.join(’, ‘)+’)’);
+}
+if(e.notes)subs.push(e.notes);
+html+=’<div class="entry"><span class="entry-num">’+(i+1)+’</span><div class="entry-body"><div class="entry-main"><span class="entry-house">’+e.door+’</span><span class="entry-ticks">’+TICKS[e.stage]+’</span><span class="entry-tag '+tag.cls+'">’+tag.label+’</span></div>’+(subs.length?’<div class="entry-sub">’+subs.join(’ · ‘)+’</div>’:’’)+’</div><button class="del-btn" onclick="deleteEntry('+e.id+')">×</button></div>’;
+});
+html+=’</div>’;
+}
+document.getElementById(‘logDisplay’).innerHTML=html;
+}
+
+function getTag(e){
+if(e.stage===6)return{cls:‘tag-sale’,label:’\u2b50 SALE’};
+if(e.isReknock&&e.stage===0)return{cls:‘tag-reknock’,label:‘Reknock \u2014 No ans.’};
+if(e.stage===0)return{cls:‘tag-none’,label:‘No answer’};
+if(e.cblReason)return{cls:‘tag-cbl’,label:‘CBL’};
+if(e.closeReason)return{cls:‘tag-close’,label:‘Not closed’};
+return{cls:‘tag-progress’,label:STAGES[e.stage]};
+}
+
+// ── RENDER KPI ───────────────────────
+function renderKPI(){
+var fd=document.getElementById(‘kpiDate’).value;
+var fs=document.getElementById(‘kpiStreet’).value.toLowerCase().trim();
+var filtered=entries.filter(function(e){return(!fd||e.date===fd)&&(!fs||e.street.toLowerCase().includes(fs));});
+var sales=filtered.filter(function(e){return e.stage===6;}).length;
+var cbl=filtered.filter(function(e){return e.cblReason!==null;}).length;
+document.getElementById(‘kDoors’).textContent=filtered.length;
+document.getElementById(‘kSales’).textContent=sales;
+document.getElementById(‘kCBL’).textContent=cbl;
+document.getElementById(‘kRate’).textContent=filtered.length?Math.round(sales/filtered.length*100)+’%’:‘0%’;
+
+// Stage breakdown
+var stageCounts=STAGES.map(function(_,i){return filtered.filter(function(e){return e.stage===i;}).length;});
+var total=filtered.length||1;
+var gridHtml=’’;
+STAGES.forEach(function(name,i){
+var count=stageCounts[i];
+var pct=Math.round(count/total*100);
+// Conversion from previous stage
+var convHtml=’’;
+if(i>0){
+var prevCount=stageCounts[i-1]+(i>1?stageCounts.slice(0,i-1).reduce(function(a,b){return a+b;},0):0);
+// simpler: % of doors that reached this stage
+convHtml=’<div class="sk-conv">’+pct+’% of all doors</div>’;
+}
+gridHtml+=’<div class="stage-kpi"><div class="sk-ticks">’+TICKS[i]+’</div><div class="sk-body"><div class="sk-count">’+count+’</div><div class="sk-name">’+name+’</div>’+convHtml+’<div class="conv-bar"><div class="conv-fill" style="width:'+pct+'%"></div></div></div></div>’;
+});
+document.getElementById(‘stageKpiGrid’).innerHTML=gridHtml;
+
+// CBL reasons
+var cblCounts={};
+filtered.forEach(function(e){if(e.cblReason){cblCounts[e.cblReason]=(cblCounts[e.cblReason]||0)+1;}});
+var cblHtml=’’;
+Object.keys(CBL_LABELS).forEach(function(k){
+if(cblCounts[k]){cblHtml+=kpiRow(CBL_LABELS[k],cblCounts[k],cbl||1,‘var(–orange)’);}
+});
+document.getElementById(‘cblKpi’).innerHTML=cblHtml||’<div class="empty">No CBL entries</div>’;
+
+// Close reasons
+var closeCounts={};
+filtered.forEach(function(e){if(e.closeReason){closeCounts[e.closeReason]=(closeCounts[e.closeReason]||0)+1;}});
+var closeTotal=Object.values(closeCounts).reduce(function(a,b){return a+b;},0)||1;
+var closeHtml=’’;
+Object.keys(CLOSE_LABELS).forEach(function(k){
+if(closeCounts[k]){closeHtml+=kpiRow(CLOSE_LABELS[k],closeCounts[k],closeTotal,‘var(–red)’);}
+});
+document.getElementById(‘closeKpi’).innerHTML=closeHtml||’<div class="empty">No close reason entries</div>’;
+}
+
+function kpiRow(label,count,total,color){
+var pct=Math.round(count/total*100);
+return ‘<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span>’+label+’</span><span style="color:'+color+'">’+count+’ (’+pct+’%)</span></div><div class="conv-bar"><div class="conv-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>’;
+}
+
+function deleteEntry(id){entries=entries.filter(function(e){return e.id!==id;});save();renderLog();renderKPI();renderReknockPanel();}
+
+// ── EXPORT ───────────────────────────
+function exportCSV(){
+if(!entries.length){showToast(‘No data to export’);return;}
+var headers=[‘Date’,‘Street’,‘Door’,‘Stage #’,‘Stage Name’,‘CBL Reason’,‘Close Reason’,‘Contract Provider’,‘Contract Time Left’,‘Contract Cost’,‘Notes’,‘Is Reknock’];
+var rows=entries.map(function(e){return[e.date,e.street,e.door,e.stage,STAGES[e.stage],e.cblReason?(CBL_LABELS[e.cblReason]||e.cblReason):’’,e.closeReason?(CLOSE_LABELS[e.closeReason]||e.closeReason):’’,e.contractInfo?e.contractInfo.provider||’’:’’,e.contractInfo?e.contractInfo.timeLeft||’’:’’,e.contractInfo?e.contractInfo.cost||’’:’’,e.notes||’’,e.isReknock?‘Yes’:‘No’];});
+var csv=[headers].concat(rows).map(function(r){return r.map(function(v){return’”’+String(v).replace(/”/g,’””’)+’”’;}).join(’,’);}).join(’\n’);
+var a=document.createElement(‘a’);
+a.href=URL.createObjectURL(new Blob([csv],{type:‘text/csv’}));
+a.download=‘sales-gauge-’+toDateStr(new Date())+’.csv’;
+a.click();
+showToast(‘CSV exported \u2713’);
+}
+
+// ── TABS ─────────────────────────────
+function switchTab(id,btn){
+document.querySelectorAll(’.tab’).forEach(function(t){t.classList.remove(‘active’);});
+document.querySelectorAll(’.tab-content’).forEach(function(c){c.classList.remove(‘active’);});
+btn.classList.add(‘active’);
+document.getElementById(‘tab-’+id).classList.add(‘active’);
+if(id===‘view’)renderLog();
+if(id===‘kpi’)renderKPI();
+}
+
+// ── UTILS ─────────────────────────────
+function save(){localStorage.setItem(‘sg_entries’,JSON.stringify(entries));}
+function toDateStr(d){return d.toISOString().slice(0,10);}
+function formatDate(str){var d=new Date(str+‘T00:00:00’);return d.toLocaleDateString(‘en-GB’,{weekday:‘short’,day:‘numeric’,month:‘short’,year:‘numeric’});}
+function showToast(msg){var t=document.getElementById(‘toast’);t.textContent=msg;t.classList.add(‘show’);setTimeout(function(){t.classList.remove(‘show’);},2200);}
+</script>
+
+</body>
+</html>
+    
+  </body>
+  
+</html>
